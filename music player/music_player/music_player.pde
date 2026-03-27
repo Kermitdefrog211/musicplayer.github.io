@@ -2,42 +2,79 @@
 boolean showPlayer = false;
 boolean isPlaying = false;
 boolean showStop = false;
-boolean showControlsBar = false; // Show/hide the control bar
-boolean loopInfinite = false; // Track loop mode
-boolean shuffleOn = false; // Track shuffle mode
-int stopButtonTimer = 0; // Timestamp when stop button appears
-int stopButtonDuration = 5000; // Duration in milliseconds (5 seconds)
+boolean showControlsBar = false; //Show/hide control bar
+boolean loopInfinite = false; //loop mode
+boolean shuffleOn = false; //shuffle mode
+int stopButtonTimer = 0; //stop button appears
+int stopButtonDuration = 5000; //5ms
 int pausePressTime = 0;
-int longPressThreshold = 1000; // milliseconds
+int longPressThreshold = 1000;
+boolean isMuted = false; // Mute status
 
-// Button size
+// Sizes
 float buttonSize = 50;
+float controlButtonSize = 50;
+float stopButtonW = 80;
+float stopButtonH = 50;
 
-// Images for buttons
+//main toggle and exit button
+float toggleButtonX = 50;
+float toggleButtonY = 0;
+float toggleButtonSize = 50;
+
+float exitButtonX = 60;
+float exitButtonY = 30;
+float exitButtonW = 60;
+float exitButtonH = 30;
+
+// Positions for music player UI
+float musicBoxW = 1000;
+float musicBoxH = 900;
+
+float progressBarYOffset = -250;
+float progressBarW = 700;
+float progressBarH = 10;
+
+// Positions for control toggle button
+float controlButtonXOffset = 150;
+float controlButtonYOffset = 100;
+
+// Positions for control bar elements
+float controlBarW = 500;
+float controlBarH = 60;
+
+// Offsets for control bar elements
+float loopToggleXOffset = -100;
+float shuffleXOffset = 0;
+float nextXOffset = 100;
+float prevXOffset = 200;
+
+// Mute button position
+float muteXOffset = -200;
+float muteYOffset = 0;
+
+//images for buttons
 PImage playImg;
 PImage pauseImg;
 PImage stopImg;
-PImage rewind20sImg;
-PImage skip20sImg;
+PImage rewind15sImg;
+PImage skip15sImg;
 PImage replayImg;
-PImage muteImg;    // Mute image
-PImage unmuteImg;  // Unmute image
-PImage shuffleImg; // Shuffle image
-PImage nextImg;    // Next button image
-PImage previousImg; // Previous button image
-
-// Mute state variable
-boolean isMuted = false; // Track mute status
+PImage muteImg;
+PImage unmuteImg;
+PImage shuffleImg;
+PImage nextImg;
+PImage previousImg;
 
 void setup() {
   fullScreen();
   rectMode(CENTER);
-  // Load images
+  //images
   playImg = loadImage("play.png");
   pauseImg = loadImage("pause.png");
   stopImg = loadImage("STOP.png");
-  rewind20sImg = loadImage("rewind30s.png");
-  skip20sImg = loadImage("skip30s.png");
+  rewind15sImg = loadImage("rewind15s.png");
+  skip15sImg = loadImage("skip15s.png");
   replayImg = loadImage("replay.png");
   unmuteImg = loadImage("unmute.png");
   muteImg = loadImage("mute.png");
@@ -48,25 +85,25 @@ void setup() {
 
 void draw() {
   background(255);
-  
-  // Toggle button
+
+  // Draw toggle button
   fill(200);
-  rect(50, height - 50, 50, 50);
-  
-  // Exit button
+  rect(toggleButtonX, height - toggleButtonY, toggleButtonSize, toggleButtonSize);
+
+  // Draw exit button
   fill(150);
-  rect(width - 30, 30, 60, 30);
+  rect(exitButtonX, exitButtonY, exitButtonW, exitButtonH);
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(12);
-  text("Exit", width - 30, 30);
-  
+  text("Exit", exitButtonX, exitButtonY);
+
   if (showPlayer) {
-    float cx = width/2;
-    float cy = height/2;
+    float cx = width / 2;
+    float cy = height / 2;
     fill(0);
-    rect(cx, cy, 800, 600);
-    drawProgressBar(cx, cy - 250);
+    rect(cx, cy, musicBoxW, musicBoxH);
+    drawProgressBar(cx, cy + progressBarYOffset);
     drawMusicPlayer(cx, cy);
     if (showStop && millis() - stopButtonTimer > stopButtonDuration) {
       showStop = false;
@@ -74,74 +111,79 @@ void draw() {
   }
 }
 
+/* --- Draw Progress Bar --- */
 void drawProgressBar(float cx, float y) {
   fill(200);
-  rect(cx, y, 700, 10);
+  rect(cx, y, progressBarW, progressBarH);
 }
 
+/* --- Draw Music Player UI --- */
 void drawMusicPlayer(float cx, float cy) {
   fill(0);
   textSize(20);
   textAlign(CENTER, CENTER);
   text("Music Player", cx, cy - 150);
   imageMode(CENTER);
-  
-  // Play/Pause
+
+  // Play/Pause Button
   PImage currentImg = isPlaying ? pauseImg : playImg;
   image(currentImg, cx, cy, buttonSize, buttonSize);
-  
-  // Rewind, skip, replay
-  image(rewind20sImg, cx - 200, cy, buttonSize, buttonSize);
-  image(skip20sImg, cx + 200, cy, buttonSize, buttonSize);
+
+  // Rewind, Skip, Replay Buttons
+  image(rewind15sImg, cx - 200, cy, buttonSize, buttonSize);
+  image(skip15sImg, cx + 200, cy, buttonSize, buttonSize);
   image(replayImg, cx, cy + 100, buttonSize, buttonSize);
-  
-  // Toggle control button
+
+  // Control Toggle Button
   fill(100);
-  rect(cx + 150, cy + 100, buttonSize, buttonSize);
+  rect(cx + controlButtonXOffset, cy + controlButtonYOffset, controlButtonSize, controlButtonSize);
   fill(255);
-  text("☰", cx + 150, cy + 100);
-  
+  text("x", cx + controlButtonXOffset, cy + controlButtonYOffset);
+
+  // Control Bar
   if (showControlsBar) {
-    drawControlsBar(cx, cy + 200);
+    drawControlsBar(cx, cy + controlButtonYOffset + 100);
   }
-  
+
+  // Stop Button
   if (showStop) {
     fill(255, 0, 0);
-    rect(cx, cy, 80, 50);
+    rect(cx, cy, stopButtonW, stopButtonH);
     fill(255);
     text("Stop", cx, cy + 2);
   }
 }
 
+//Draw Control Bar
 void drawControlsBar(float cx, float cy) {
   fill(50);
-  rect(cx, cy, 500, 60);
-  
+  rect(cx, cy, controlBarW, controlBarH);
+
   // Loop toggle
   fill(100);
-  rect(cx - 100, cy, 80, 40);
+  rect(cx + loopToggleXOffset, cy, 80, 40);
   fill(255);
   String loopLabel = loopInfinite ? "Loop: Infinite" : "Loop: Normal";
-  text(loopLabel, cx - 100, cy);
-  
-  // Shuffle (image)
+  text(loopLabel, cx + loopToggleXOffset, cy);
+
+  // Shuffle Button
   fill(100);
-  rect(cx, cy, 80, 40);
-  image(shuffleImg, cx, cy, 40, 40);
-  
-  // Next (image)
+  rect(cx + shuffleXOffset, cy, 80, 40);
+  image(shuffleImg, cx + shuffleXOffset, cy, 40, 40);
+
+  // Next Button
   fill(100);
-  rect(cx + 100, cy, 80, 40);
-  image(nextImg, cx + 100, cy, 40, 40);
-  
-  // Previous (image)
+  rect(cx + nextXOffset, cy, 80, 40);
+  image(nextImg, cx + nextXOffset, cy, 40, 40);
+
+  // Previous Button
   fill(100);
-  rect(cx + 200, cy, 80, 40);
-  image(previousImg, cx + 200, cy, 40, 40);
-  
-  // Mute/Unmute
-  float muteX = cx - 200; // same as in drawMusicPlayer
-  float muteY = cy;
+  rect(cx + prevXOffset, cy, 80, 40);
+  image(previousImg, cx + prevXOffset, cy, 40, 40);
+
+  // Mute/Unmute Button
+  float muteX = cx + muteXOffset;
+  float muteY = cy + muteYOffset;
   if (isMuted) {
     image(muteImg, muteX, muteY, buttonSize, buttonSize);
   } else {
@@ -149,56 +191,61 @@ void drawControlsBar(float cx, float cy) {
   }
 }
 
+/* --- Mouse Pressed Logic --- */
 void mousePressed() {
-  // Exit button
-  if (mouseX > width - 60 && mouseY < 40) {
-    exit();
-  }
-  // Toggle main UI
-  if (dist(mouseX, mouseY, 50, height - 50) < 25) {
+  float cx = width / 2;
+  float cy = height / 2;
+
+  // Main toggle button
+  if (mouseX > toggleButtonX - toggleButtonSize / 2 && mouseX < toggleButtonX + toggleButtonSize / 2 &&
+      mouseY > height - toggleButtonY - toggleButtonSize / 2 && mouseY < height - toggleButtonY + toggleButtonSize / 2) {
     showPlayer = !showPlayer;
   }
-  
-  if (showPlayer) {
-    float cx = width/2;
-    float cy = height/2;
 
+  // Exit button
+  if (mouseX > exitButtonX - exitButtonW / 2 && mouseX < exitButtonX + exitButtonW / 2 &&
+      mouseY > exitButtonY - exitButtonH / 2 && mouseY < exitButtonY + exitButtonH / 2) {
+    exit();
+  }
+
+  if (showPlayer) {
     // Play/Pause
-    if (dist(mouseX, mouseY, cx, cy) < buttonSize/2) {
+    if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
+        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
       pausePressTime = millis();
     }
 
-    // Rewind, skip, replay
-    if (dist(mouseX, mouseY, cx - 200, cy) < buttonSize/2) {
-      println("Rewind 20 seconds");
+    // Rewind 15s
+    if (mouseX > cx - 200 - buttonSize / 2 && mouseX < cx - 200 + buttonSize / 2 &&
+        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+      println("Rewind 15 seconds");
     }
-    if (dist(mouseX, mouseY, cx + 200, cy) < buttonSize/2) {
-      println("Skip 20 seconds");
+
+    // Skip 15s
+    if (mouseX > cx + 200 - buttonSize / 2 && mouseX < cx + 200 + buttonSize / 2 &&
+        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+      println("Skip 15 seconds");
     }
-    if (dist(mouseX, mouseY, cx, cy + 100) < buttonSize/2) {
+
+    // Replay
+    if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
+        mouseY > cy + 100 - buttonSize / 2 && mouseY < cy + 100 + buttonSize / 2) {
       println("Replay");
     }
 
-    // Toggle control bar
-    if (abs(mouseX - (cx + 150)) < buttonSize/2 && abs(mouseY - (cy + 100)) < buttonSize/2) {
+    // Toggle controls bar
+    if (mouseX > cx + controlButtonXOffset - controlButtonSize / 2 && mouseX < cx + controlButtonXOffset + controlButtonSize / 2 &&
+        mouseY > cy + controlButtonYOffset - controlButtonSize / 2 && mouseY < cy + controlButtonYOffset + controlButtonSize / 2) {
       showControlsBar = !showControlsBar;
     }
 
+    // Controls bar buttons
     if (showControlsBar) {
       float ctrlX = cx;
-      float ctrlY = cy + 200;
-
-      // Loop toggle (long press)
-      if (abs(mouseX - (ctrlX - 100)) < 40 && abs(mouseY - ctrlY) < 20) {
-        int duration = millis() - pausePressTime;
-        if (duration > longPressThreshold) {
-          loopInfinite = !loopInfinite;
-          println("Loop: " + (loopInfinite ? "Infinite" : "Normal"));
-        }
-      }
+      float ctrlY = cy + controlButtonYOffset + 100;
 
       // Shuffle toggle (long press)
-      if (abs(mouseX - ctrlX) < 40 && abs(mouseY - ctrlY) < 20) {
+      if (mouseX > ctrlX - 40 && mouseX < ctrlX + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
         int duration = millis() - pausePressTime;
         if (duration > longPressThreshold) {
           shuffleOn = !shuffleOn;
@@ -206,21 +253,21 @@ void mousePressed() {
         }
       }
 
-      // Next
-      if (abs(mouseX - (ctrlX + 100)) < 40 && abs(mouseY - ctrlY) < 20) {
+      // Next button
+      if (mouseX > ctrlX + nextXOffset - 40 && mouseX < ctrlX + nextXOffset + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
         println("Next");
       }
 
-      // Previous
-      if (abs(mouseX - (ctrlX + 200)) < 40 && abs(mouseY - ctrlY) < 20) {
+      // Previous button
+      if (mouseX > ctrlX + prevXOffset - 40 && mouseX < ctrlX + prevXOffset + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
         println("Previous");
       }
     }
 
-    // Long press detection for Loop button
-    float loopX = cx - 100;
-    float loopY = cy + 200;
-    if (abs(mouseX - loopX) < 40 && abs(mouseY - loopY) < 20) {
+    // Long press for loop toggle
+    float loopX = cx + loopToggleXOffset;
+    float loopY = cy + controlButtonYOffset + 200;
+    if (mouseX > loopX - 40 && mouseX < loopX + 40 && mouseY > loopY - 20 && mouseY < loopY + 20) {
       int duration = millis() - pausePressTime;
       if (duration > longPressThreshold) {
         loopInfinite = !loopInfinite;
@@ -228,41 +275,27 @@ void mousePressed() {
       }
     }
 
-    // Long press detection for Shuffle
-    float shuffleX = cx;
-    float shuffleY = cy + 200;
-    if (abs(mouseX - shuffleX) < 40 && abs(mouseY - shuffleY) < 20) {
-      int duration = millis() - pausePressTime;
-      if (duration > longPressThreshold) {
-        shuffleOn = !shuffleOn;
-        println("Shuffle mode toggled to " + (shuffleOn ? "On" : "Off"));
-      }
-    }
-
     // Stop button
-    if (showStop && abs(mouseX - cx) < 40 && abs(mouseY - (cy + 2)) < 25) {
+    float stopX = cx;
+    float stopY = cy;
+    if (showStop && mouseX > stopX - stopButtonW / 2 && mouseX < stopX + stopButtonW / 2 &&
+        mouseY > stopY - stopButtonH / 2 && mouseY < stopY + stopButtonH / 2) {
       println("Stop");
       showStop = false;
     }
   }
-
-  // Detect click on mute/unmute
-  if (showPlayer && showControlsBar) {
-    float cx = width/2;
-    float cy = height/2;
-    float muteX = cx - 200;
-    float muteY = cy;
-    if (abs(mouseX - muteX) < buttonSize/2 && abs(mouseY - muteY) < buttonSize/2) {
-      isMuted = !isMuted;
-      println("Mute toggled. Now: " + (isMuted ? "Muted" : "Unmuted"));
-    }
-  }
 }
 
+// Mouse Released 
 void mouseReleased() {
-  if (showPlayer && dist(mouseX, mouseY, width/2, height/2) < buttonSize/2) {
-    int pressDuration = millis() - pausePressTime;
-    if (pressDuration > longPressThreshold) {
+  float cx = width / 2;
+  float cy = height / 2;
+
+  // Play/Pause toggle (circle area)
+  if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
+      mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+    int duration = millis() - pausePressTime;
+    if (duration > longPressThreshold) {
       showStop = true;
       stopButtonTimer = millis();
     } else {
