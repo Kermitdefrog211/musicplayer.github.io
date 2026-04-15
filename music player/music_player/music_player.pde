@@ -53,6 +53,11 @@ float prevXOffset = 200;
 float muteXOffset = -200;
 float muteYOffset = 0;
 
+
+
+
+
+
 //images for buttons
 PImage playImg;
 PImage pauseImg;
