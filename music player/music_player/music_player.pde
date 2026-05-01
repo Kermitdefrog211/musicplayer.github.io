@@ -1,26 +1,23 @@
-//imported librarys
-//
+//imported libraries
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 import ddf.minim.effects.*;
 import ddf.minim.signals.*;
 import ddf.minim.spi.*;
 import ddf.minim.ugens.*;
-//
-import java.util.ArrayList;
-//
+
 // Variables for the music player UI
 boolean showPlayer = false;
 boolean isPlaying = false;
 boolean showStop = false;
-boolean showControlsBar = false; //Show/hide control bar
-boolean loopInfinite = false; //loop mode
-boolean shuffleOn = false; //shuffle mode
-int stopButtonTimer = 0; //stop button appears
-int stopButtonDuration = 5000; //5ms
+boolean showControlsBar = false;
+boolean loopInfinite = false;
+boolean shuffleOn = false;
+int stopButtonTimer = 0;
+int stopButtonDuration = 5000;
 int pausePressTime = 0;
 int longPressThreshold = 1000;
-boolean isMuted = false; // Mute status
+boolean isMuted = false;
 
 // Sizes
 float buttonSize = 50;
@@ -28,95 +25,94 @@ float controlButtonSize = 50;
 float stopButtonW = 80;
 float stopButtonH = 50;
 
-//main toggle and exit button
-float toggleButtonX = 50;
-float toggleButtonY = 0;
-float toggleButtonSize = 50;
+// Arrays for positions and sizes
+float[] toggleButtonPos = {50, 50}; // x, y
+float toggleButtonSizeVal = 50;
 
-float exitButtonX = 60;
-float exitButtonY = 30;
-float exitButtonW = 60;
-float exitButtonH = 30;
+float[] exitButtonPos = {60, 30}; // x, y
+float[] exitButtonSizeVal = {60, 30};
 
-// Positions for music player UI
+// Music box size
 float musicBoxW = 1000;
 float musicBoxH = 900;
 
+// Music Player lable box
+float[] musicLabelBoxPos = {0, 100}; // will set in setup()
+float[] musicLabelBoxSize = {500, 100};
+
+// Progress bar
 float progressBarYOffset = 200;
 float progressBarW = 700;
 float progressBarH = 10;
 
-// Positions for control toggle button
+// Control toggle button offsets
 float controlButtonXOffset = 150;
 float controlButtonYOffset = 100;
 
-// Positions for control bar elements
+// Control bar size
 float controlBarW = 500;
 float controlBarH = 60;
 
 // Offsets for control bar elements
-float loopToggleXOffset = -100;
-float shuffleXOffset = 0;
-float nextXOffset = 100;
-float prevXOffset = 200;
+float[] controlBarOffsetsX = {-100, 0, 100, 200}; // loop, shuffle, next, prev
 
-// Mute button position
+
+// Mute button position relative to control bar
 float muteXOffset = -200;
 float muteYOffset = 0;
 
-
-
-
-
-
-//images for buttons
-PImage playImg;
-PImage pauseImg;
-PImage stopImg;
-PImage rewind15sImg;
-PImage skip15sImg;
-PImage replayImg;
-PImage muteImg;
-PImage unmuteImg;
-PImage shuffleImg;
-PImage nextImg;
-PImage previousImg;
+// Images
+PImage[] controlBarImages = new PImage[4]; // shuffle, next, prev, mute/unmute
+PImage playImg, pauseImg, stopImg, rewind15sImg, skip15sImg, replayImg, muteImg, unmuteImg;
 
 void setup() {
   fullScreen();
   rectMode(CENTER);
-  //images
+  textAlign(CENTER, CENTER);
+  
+  // Initialize "Music Player" label box position based on width
+  musicLabelBoxPos[0] = width/2;
+
+  // Load images
   playImg = loadImage("play.png");
   pauseImg = loadImage("pause.png");
   stopImg = loadImage("STOP.png");
   rewind15sImg = loadImage("rewind15s.png");
   skip15sImg = loadImage("skip15s.png");
   replayImg = loadImage("replay.png");
-  unmuteImg = loadImage("unmute.png");
   muteImg = loadImage("mute.png");
-  shuffleImg = loadImage("shuffle.png");
-  nextImg = loadImage("next.png");
-  previousImg = loadImage("previous.png");
+  unmuteImg = loadImage("unmute.png");
+  controlBarImages[0] = loadImage("shuffle.png");
+  controlBarImages[1] = loadImage("next.png");
+  controlBarImages[2] = loadImage("previous.png");
+  controlBarImages[3] = loadImage("mute.png"); // default, will switch based on mute state
 }
 
 void draw() {
   background(255);
 
+  // Draw the "Music Player" label box
+  fill(180);
+  rect(musicLabelBoxPos[0], musicLabelBoxPos[1], musicLabelBoxSize[0], musicLabelBoxSize[1]);
+  fill(0);
+  textSize(50);
+  text("Music Player", musicLabelBoxPos[0], musicLabelBoxPos[1]);
+
   // Draw toggle button
   fill(200);
-  rect(toggleButtonX, height - toggleButtonY, toggleButtonSize, toggleButtonSize);
+  rect(toggleButtonPos[0], height - toggleButtonPos[1], toggleButtonSizeVal, toggleButtonSizeVal);
 
   // Draw exit button
   fill(150);
-  rect(exitButtonX, exitButtonY, exitButtonW, exitButtonH);
+  rect(exitButtonPos[0], exitButtonPos[1], exitButtonSizeVal[0], exitButtonSizeVal[1]);
   fill(255);
-  textAlign(CENTER, CENTER);
   textSize(12);
-  text("Exit", exitButtonX, exitButtonY);
+  text("Exit", exitButtonPos[0], exitButtonPos[1]);
 
   if (showPlayer) {
     float cx = width / 2;
     float cy = height / 2;
+
     fill(0);
     rect(cx, cy, musicBoxW, musicBoxH);
     drawProgressBar(cx, cy + progressBarYOffset);
@@ -127,13 +123,13 @@ void draw() {
   }
 }
 
-/* --- Draw Progress Bar --- */
+// Draw Progress Bar
 void drawProgressBar(float cx, float y) {
   fill(200);
   rect(cx, y, progressBarW, progressBarH);
 }
 
-/* --- Draw Music Player UI --- */
+// Draw Music Player UI
 void drawMusicPlayer(float cx, float cy) {
   fill(0);
   textSize(20);
@@ -170,32 +166,32 @@ void drawMusicPlayer(float cx, float cy) {
   }
 }
 
-//Draw Control Bar
+// Draw Control Bar
 void drawControlsBar(float cx, float cy) {
   fill(50);
   rect(cx, cy, controlBarW, controlBarH);
 
-  // Loop toggle
+  // Loop toggle (long press)
   fill(100);
-  rect(cx + loopToggleXOffset, cy, 80, 40);
+  rect(cx + controlBarOffsetsX[0], cy, 80, 40);
   fill(255);
   String loopLabel = loopInfinite ? "Loop: Infinite" : "Loop: Normal";
-  text(loopLabel, cx + loopToggleXOffset, cy);
+  text(loopLabel, cx + controlBarOffsetsX[0], cy);
 
   // Shuffle Button
   fill(100);
-  rect(cx + shuffleXOffset, cy, 80, 40);
-  image(shuffleImg, cx + shuffleXOffset, cy, 40, 40);
+  rect(cx + controlBarOffsetsX[1], cy, 80, 40);
+  image(controlBarImages[0], cx + controlBarOffsetsX[1], cy, 40, 40);
 
   // Next Button
   fill(100);
-  rect(cx + nextXOffset, cy, 80, 40);
-  image(nextImg, cx + nextXOffset, cy, 40, 40);
+  rect(cx + controlBarOffsetsX[2], cy, 80, 40);
+  image(controlBarImages[1], cx + controlBarOffsetsX[2], cy, 40, 40);
 
   // Previous Button
   fill(100);
-  rect(cx + prevXOffset, cy, 80, 40);
-  image(previousImg, cx + prevXOffset, cy, 40, 40);
+  rect(cx + controlBarOffsetsX[3], cy, 80, 40);
+  image(controlBarImages[2], cx + controlBarOffsetsX[3], cy, 40, 40);
 
   // Mute/Unmute Button
   float muteX = cx + muteXOffset;
@@ -207,45 +203,41 @@ void drawControlsBar(float cx, float cy) {
   }
 }
 
-/* --- Mouse Pressed Logic --- */
+// Mouse pressed logic
 void mousePressed() {
   float cx = width / 2;
   float cy = height / 2;
 
-  // Main toggle button
-  if (mouseX > toggleButtonX - toggleButtonSize / 2 && mouseX < toggleButtonX + toggleButtonSize / 2 &&
-      mouseY > height - toggleButtonY - toggleButtonSize / 2 && mouseY < height - toggleButtonY + toggleButtonSize / 2) {
+  // Toggle main button
+  if (mouseX > toggleButtonPos[0] - toggleButtonSizeVal / 2 && mouseX < toggleButtonPos[0] + toggleButtonSizeVal / 2 &&
+      mouseY > height - toggleButtonPos[1] - toggleButtonSizeVal / 2 && mouseY < height - toggleButtonPos[1] + toggleButtonSizeVal / 2) {
     showPlayer = !showPlayer;
   }
 
   // Exit button
-  if (mouseX > exitButtonX - exitButtonW / 2 && mouseX < exitButtonX + exitButtonW / 2 &&
-      mouseY > exitButtonY - exitButtonH / 2 && mouseY < exitButtonY + exitButtonH / 2) {
+  if (mouseX > exitButtonPos[0] - exitButtonSizeVal[0] / 2 && mouseX < exitButtonPos[0] + exitButtonSizeVal[0] / 2 &&
+      mouseY > exitButtonPos[1] - exitButtonSizeVal[1] / 2 && mouseY < exitButtonPos[1] + exitButtonSizeVal[1] / 2) {
     exit();
   }
 
   if (showPlayer) {
     // Play/Pause
-    if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
-        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+    if (dist(mouseX, mouseY, cx, cy) < buttonSize / 2) {
       pausePressTime = millis();
     }
 
     // Rewind 15s
-    if (mouseX > cx - 200 - buttonSize / 2 && mouseX < cx - 200 + buttonSize / 2 &&
-        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+    if (mouseX > cx - 200 - buttonSize / 2 && mouseX < cx - 200 + buttonSize / 2 && abs(mouseY - cy) < buttonSize / 2) {
       println("Rewind 15 seconds");
     }
 
     // Skip 15s
-    if (mouseX > cx + 200 - buttonSize / 2 && mouseX < cx + 200 + buttonSize / 2 &&
-        mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+    if (mouseX > cx + 200 - buttonSize / 2 && mouseX < cx + 200 + buttonSize / 2 && abs(mouseY - cy) < buttonSize / 2) {
       println("Skip 15 seconds");
     }
 
     // Replay
-    if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
-        mouseY > cy + 100 - buttonSize / 2 && mouseY < cy + 100 + buttonSize / 2) {
+    if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 && abs(mouseY - (cy + 100)) < buttonSize / 2) {
       println("Replay");
     }
 
@@ -257,11 +249,19 @@ void mousePressed() {
 
     // Controls bar buttons
     if (showControlsBar) {
-      float ctrlX = cx;
       float ctrlY = cy + controlButtonYOffset + 100;
 
+      // Loop toggle (long press)
+      if (dist(mouseX, mouseY, cx + controlBarOffsetsX[0], ctrlY) < 40) {
+        int duration = millis() - pausePressTime;
+        if (duration > longPressThreshold) {
+          loopInfinite = !loopInfinite;
+          println("Loop mode: " + (loopInfinite ? "Infinite" : "Normal"));
+        }
+      }
+
       // Shuffle toggle (long press)
-      if (mouseX > ctrlX - 40 && mouseX < ctrlX + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
+      if (dist(mouseX, mouseY, cx + controlBarOffsetsX[1], ctrlY) < 40) {
         int duration = millis() - pausePressTime;
         if (duration > longPressThreshold) {
           shuffleOn = !shuffleOn;
@@ -269,47 +269,26 @@ void mousePressed() {
         }
       }
 
-      // Next button
-      if (mouseX > ctrlX + nextXOffset - 40 && mouseX < ctrlX + nextXOffset + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
+      // Next
+      if (dist(mouseX, mouseY, cx + controlBarOffsetsX[2], ctrlY) < 40) {
         println("Next");
       }
 
-      // Previous button
-      if (mouseX > ctrlX + prevXOffset - 40 && mouseX < ctrlX + prevXOffset + 40 && mouseY > ctrlY - 20 && mouseY < ctrlY + 20) {
+      // Previous
+      if (dist(mouseX, mouseY, cx + controlBarOffsetsX[3], ctrlY) < 40) {
         println("Previous");
       }
-    }
-
-    // Long press for loop toggle
-    float loopX = cx + loopToggleXOffset;
-    float loopY = cy + controlButtonYOffset + 200;
-    if (mouseX > loopX - 40 && mouseX < loopX + 40 && mouseY > loopY - 20 && mouseY < loopY + 20) {
-      int duration = millis() - pausePressTime;
-      if (duration > longPressThreshold) {
-        loopInfinite = !loopInfinite;
-        println("Loop mode toggled to " + (loopInfinite ? "Infinite" : "Normal"));
-      }
-    }
-
-    // Stop button
-    float stopX = cx;
-    float stopY = cy;
-    if (showStop && mouseX > stopX - stopButtonW / 2 && mouseX < stopX + stopButtonW / 2 &&
-        mouseY > stopY - stopButtonH / 2 && mouseY < stopY + stopButtonH / 2) {
-      println("Stop");
-      showStop = false;
     }
   }
 }
 
-// Mouse Released 
+// Mouse released
 void mouseReleased() {
   float cx = width / 2;
   float cy = height / 2;
 
-  // Play/Pause toggle (circle area)
-  if (mouseX > cx - buttonSize / 2 && mouseX < cx + buttonSize / 2 &&
-      mouseY > cy - buttonSize / 2 && mouseY < cy + buttonSize / 2) {
+  // Play/Pause toggle
+  if (dist(mouseX, mouseY, cx, cy) < buttonSize / 2) {
     int duration = millis() - pausePressTime;
     if (duration > longPressThreshold) {
       showStop = true;
