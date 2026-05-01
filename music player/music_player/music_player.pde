@@ -31,7 +31,7 @@ float exitButtonH = 30;
 float musicBoxW = 1000;
 float musicBoxH = 900;
 
-float progressBarYOffset = -250;
+float progressBarYOffset = 200;
 float progressBarW = 700;
 float progressBarH = 10;
 
