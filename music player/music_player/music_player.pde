@@ -64,11 +64,37 @@ float muteYOffset = 0;
 // Images
 PImage[] controlBarImages = new PImage[4]; // shuffle, next, prev, mute/unmute
 PImage playImg, pauseImg, stopImg, rewind15sImg, skip15sImg, replayImg, muteImg, unmuteImg;
-
+//
+//
+//
+String saveTxtPath_currentSong; //For Saving Last Known Song Played
+String saveTxtPath_randomStart; //For Saving Preference: Random Start
+//
+Minim minim; //initates entire class
+int numberOfSongs = 1; //Best Practice
+//int numberOfSoundEffects = ???
+AudioPlayer[] playList; //length of array determined by reading the Music Folder
+//AudioPlayer[] soundEffects = new AudioPlayer[ numberOfSoundEffects ];
+int currentSong; //Reads .txt file to populate last known song
+//
+Boolean randomStart=false;
+//
+//
 void setup() {
   fullScreen();
   rectMode(CENTER);
   textAlign(CENTER, CENTER);
+    //
+  //Saving Last Known Song Played
+  // Initialize the save file path
+  saveTxtPath_currentSong = sketchPath("currentSong.txt");
+  saveTxtPath_randomStart = sketchPath("randomStart.txt");
+  //println(saveTxtPath_currentSong);
+  //println(saveTxtPath_randomStart);
+  //
+  
+  
+  
   
   // Initialize "Music Player" label box position based on width
   musicLabelBoxPos[0] = width/2;
